@@ -1,10 +1,10 @@
-name: Deploy CloudFormation Stack for EKS
+name: Delete CloudFormation Stack for EKS
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  delete:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,14 +22,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy CloudFormation stack
+      - name: Delete CloudFormation stack
         run: |
-          aws cloudformation deploy \
-            --stack-name eks-cluster-stack \
-            --template-file ./a-aws-eks-cfn.yaml \
-            --capabilities CAPABILITY_NAMED_IAM
+          aws cloudformation delete-stack \
+            --stack-name eks-cluster-stack
 
-      - name: Describe CloudFormation stack
+      - name: Wait for stack deletion to complete
         run: |
-          aws cloudformation describe-stacks \
+          aws cloudformation wait stack-delete-complete \
             --stack-name eks-cluster-stack
