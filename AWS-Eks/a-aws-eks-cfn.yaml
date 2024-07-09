@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  EksVpc:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: '192.168.0.0/16'
+      Tags:
+        - Key: Name
+          Value: eksvpc
+  
+  EksVpcIgw:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: eksvpc-igw
+
+  VpcGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref EksVpc
+      InternetGatewayId: !Ref EksVpcIgw
+  
+  PrivateSubnetUsEast1a:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref EksVpc
+      CidrBlock: '192.168.0.0/19'
+      AvailabilityZone: 'us-east-1a'
+      Tags:
+        - Key: Name
+          Value: private-us-east-1a
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+        - Key: kubernetes.io/cluster/demo
+          Value: owned
+
+  PrivateSubnetUsEast1b:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref EksVpc
+      CidrBlock: '192.168.32.0/19'
+      AvailabilityZone: 'us-east-1b'
+      Tags:
+        - Key: Name
+          Value: private-us-east-1b
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+        - Key: kubernetes.io/cluster/demo
+          Value: owned
+
+  PublicSubnetUsEast1a:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref EksVpc
+      CidrBlock: '192.168.64.0/19'
+      AvailabilityZone: 'us-east-1a'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-us-east-1a
+        - Key: kubernetes.io/role/elb
+          Value: '1'
+        - Key: kubernetes.io/cluster/demo
+          Value: owned
+
+  PublicSubnetUsEast1b:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref EksVpc
+      CidrBlock: '192.168.96.0/19'
+      AvailabilityZone: 'us-east-1b'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-us-east-1b
+        - Key: kubernetes.io/role/elb
+          Value: '1'
+        - Key: kubernetes.io/cluster/demo
+          Value: owned
+
+  NatEip:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: 'vpc'
+      Tags:
+        - Key: Name
+          Value: 'nat'
+
+  NatGateway:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnetUsEast1a
+      Tags:
+        - Key: Name
+          Value: 'k8s-nat'
+    DependsOn: EksVpcIgw
+
+  PrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref EksVpc
+      Tags:
+        - Key: Name
+          Value: private
+
+  PrivateRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGateway
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref EksVpc
+      Tags:
+        - Key: Name
+          Value: public
+
+  PublicRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref EksVpcIgw
+
+  PrivateSubnetRouteTableAssociationUsEast1a:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetUsEast1a
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssociationUsEast1b:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetUsEast1b
+      RouteTableId: !Ref PrivateRouteTable
+
+  PublicSubnetRouteTableAssociationUsEast1a:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetUsEast1a
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociationUsEast1b:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetUsEast1b
+      RouteTableId: !Ref PublicRouteTable

@@ -1,0 +1,99 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./Docker-Ec2/terraform-state
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.8.4
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
+
+      - name: Commit and Push Terraform State Changes
+        run: |
+          git clone git@github.com:Herr-Aksoy/Terra-Githup-Delet.git
+          cd Terra-Githup-Delet/Docker-Ec2/
+          rm -rf terraform-state/*
+          cp ./a0-provider.tf  ./terraform-state/
+          git config --global user.email "mat.aksoy06@gmail.com"
+          git config --global user.name "Herr-Aksoy"
+          git add .
+          git commit -m "Github Action-Deleted all AWS Resource"
+          git push origin main
+
+
+
+# name: Terraform Destroy
+
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       destroy_resources:
+#         description: 'Destroy AWS resources created by Terraform'
+#         required: true
+#         default: 'true'
+
+# jobs:
+#   terraform_destroy:
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event.inputs.destroy_resources == 'true' }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-1
+
+#       - name: Install Terraform
+#         uses: hashicorp/setup-terraform@v1
+#         with:
+#           terraform_version: 1.8.4
+
+#       - name: Download Terraform state file
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: terraform-state
+#           path: .
+
+#       - name: List files for debugging
+#         run: ls -alh
+
+#       - name: Terraform init
+#         run: terraform init
+
+#       - name: Terraform destroy
+#         run: terraform destroy -auto-approve
