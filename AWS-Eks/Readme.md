@@ -58,7 +58,7 @@ This project is licensed under the MIT License.
 <table>
   <tr>
     <td><img src="images/a1-components.png" alt="Components" width="250"></td>
-    <td><img src="/images/a2-resources.png" alt="Resources" width="250"></td>
+    <td><img src="images/a2-resources.png" alt="Resources" width="250"></td>
   </tr>
     <tr>
     <td><a  title="Settings">Components</a></td>
