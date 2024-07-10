@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EksClusterOidcUrl:
+    Type: String
+    Description: "OIDC URL of the EKS Cluster"
+  EksClusterName:
+    Type: String
+    Description: "Name of the EKS Cluster"
+  CertificateThumbprint:
+    Type: String
+    Description: "SHA-1 thumbprint of the OIDC provider certificate"
+
+Resources:
+  EksOidcProvider:
+    Type: "AWS::IAM::OIDCProvider"
+    Properties:
+      Url: !Ref EksClusterOidcUrl
+      ClientIdList:
+        - "sts.amazonaws.com"
+      ThumbprintList:
+        - !Ref CertificateThumbprint
+
+  EksClusterAutoscalerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "eks-cluster-autoscaler"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref EksOidcProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                oidc.eks.<YOUR_REGION>.amazonaws.com/id/${EksClusterOidcUrl#https://}:sub: "system:serviceaccount:kube-system:cluster-autoscaler"
+
+  EksClusterAutoscalerPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "eks-cluster-autoscaler"
+      Roles: 
+        - !Ref EksClusterAutoscalerRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: 
+              - "autoscaling:DescribeAutoScalingGroups"
+              - "autoscaling:DescribeAutoScalingInstances"
+              - "autoscaling:DescribeLaunchConfigurations"
+              - "autoscaling:DescribeTags"
+              - "autoscaling:SetDesiredCapacity"
+              - "autoscaling:TerminateInstanceInAutoScalingGroup"
+              - "ec2:DescribeLaunchTemplateVersions"
+            Resource: "*"
+
+Outputs:
+  EksOidcProviderArn:
+    Description: "ARN of the EKS OIDC Provider"
+    Value: !GetAtt EksOidcProvider.Arn
+  EksClusterAutoscalerRoleArn:
+    Description: "ARN of the EKS Cluster Autoscaler IAM Role"
+    Value: !GetAtt EksClusterAutoscalerRole.Arn

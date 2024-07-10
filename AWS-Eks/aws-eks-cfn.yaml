@@ -1,4 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Thumbprint:
+    Type: String
+    Description: The SHA-1 thumbprint of the root CA certificate used by the OIDC provider
+
 Resources:
   EksVpc:
     Type: 'AWS::EC2::VPC'
@@ -191,7 +197,7 @@ Resources:
           - !Ref PrivateSubnetUsEast1b
           - !Ref PublicSubnetUsEast1a
           - !Ref PublicSubnetUsEast1b
-      Version: '1.21'  # EKS versiyonu, gerekli durumda güncelleyebilirsiniz.
+      Version: '1.24'  
 
   EksNodeRole:
     Type: 'AWS::IAM::Role'
@@ -264,15 +270,17 @@ Resources:
       CapacityType: ON_DEMAND
       UpdateConfig:
         MaxUnavailable: 1
-
+  
   EksOidcProvider:
     Type: "AWS::IAM::OIDCProvider"
     Properties:
-      Url: !GetAtt EksCluster.OpenIdConnectIssuerUrl
+      Url: !Sub
+        - https://oidc.eks.${AWS::Region}.amazonaws.com/id/${ClusterId}
+        - ClusterId: !GetAtt EksCluster.ClusterId
       ClientIdList:
-        - "sts.amazonaws.com"
+        - sts.amazonaws.com
       ThumbprintList:
-        - !Sub "PLACE_YOUR_CERTIFICATE_THUMBPRINT_HERE"
+        - !Ref Thumbprint
 
   EksClusterAutoscalerRole:
     Type: "AWS::IAM::Role"

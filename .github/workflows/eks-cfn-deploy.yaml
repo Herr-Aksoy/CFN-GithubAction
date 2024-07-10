@@ -26,10 +26,61 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name eks-cluster-stack \
-            --template-file ./a-aws-eks-cfn.yaml \
+            --template-file ./eks-temel.yaml \
             --capabilities CAPABILITY_NAMED_IAM
 
-      - name: Describe CloudFormation stack
-        run: |
-          aws cloudformation describe-stacks \
-            --stack-name eks-cluster-stack
+      # - name: Describe CloudFormation stack
+      #   run: |
+      #     aws cloudformation describe-stacks \
+      #       --stack-name eks-cluster-stack
+
+  setup-argocd:
+    name: Setup Argo CD on EKS Cluster
+    runs-on: ubuntu-latest
+    needs: create-eks-cluster
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Setup kubectl
+      run: |
+        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+
+    - name: Update kubeconfig
+      run: |
+        aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+
+    - name: Install Argo CD
+      run: |
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+
+
+
+    # - name: Install Argo CD CLI
+    #   run: |
+    #     curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+    #     chmod +x /usr/local/bin/argocd
+
+    # - name: Wait for Argo CD server to be ready
+    #   run: |
+    #     kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
+
+    # - name: Get Argo CD initial password
+    #   run: |
+    #     ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+    #     ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o jsonpath='{.items[0].metadata.name}')
+    #     echo "Argo CD Server: $ARGOCD_SERVER"
+    #     echo "Argo CD Initial Password: $ARGOCD_INITIAL_PASSWORD"
