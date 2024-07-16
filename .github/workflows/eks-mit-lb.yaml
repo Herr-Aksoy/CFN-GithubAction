@@ -1,4 +1,4 @@
-name: Deploy CloudFormation Stack for EKS and Create ArgoCD
+name: Deploy CloudFormation Stack with Lb for EKS and Create ArgoCD
 
 on:
   workflow_dispatch:

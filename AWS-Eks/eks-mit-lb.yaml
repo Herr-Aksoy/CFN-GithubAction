@@ -137,7 +137,7 @@ Resources:
         DesiredSize: 1
         MaxSize: 5
         MinSize: 1
-      InstanceTypes: ["t2.medium"]
+      InstanceTypes: ["t3.medium"]
       AmiType: AL2_x86_64
       CapacityType: ON_DEMAND
 
@@ -148,8 +148,8 @@ Resources:
       Subnets:
         - !Ref PublicSubnetUsEast1a
         - !Ref PublicSubnetUsEast1b
-      SecurityGroups: 
-        - !GetAtt EksCluster.SecurityGroupIds
+      SecurityGroups:
+        - !GetAtt EksCluster.ClusterSecurityGroupId
       Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
