@@ -1,0 +1,74 @@
+name: Deploy CloudFormation Stack for EKS and Create ArgoCD
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-eks-cluster:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./AWS-Eks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy CloudFormation stack
+        id: deploy_stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name eks-cluster-stack \
+            --template-file ./eks-mit-lb.yaml \
+            --capabilities CAPABILITY_NAMED_IAM
+
+      - name: Get Load Balancer DNS Name
+        id: get_lb_dns
+        run: |
+          lb_dns=$(aws cloudformation describe-stacks --stack-name eks-cluster-stack --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNSName'].OutputValue" --output text)
+          echo "::set-output name=lb_dns::$lb_dns"
+
+  setup-argocd:
+    name: Setup Argo CD on EKS Cluster
+    runs-on: ubuntu-latest
+    needs: deploy-eks-cluster
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup kubectl
+        run: |
+          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+
+      - name: Update kubeconfig
+        run: |
+          aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+
+      - name: Install Argo CD
+        run: |
+          kubectl create namespace argocd
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+      - name: Update ArgoCD LoadBalancer Service
+        run: |
+          lb_dns="${{ steps.get_lb_dns.outputs.lb_dns }}"
+          kubectl patch svc argocd-server -n argocd -p "{\"spec\": {\"type\": \"LoadBalancer\", \"loadBalancerIP\": \"$lb_dns\"}}"

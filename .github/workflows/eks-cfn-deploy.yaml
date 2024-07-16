@@ -1,4 +1,4 @@
-name: Deploy CloudFormation Stack for EKS
+name: Deploy CloudFormation Stack for EKS and Create Argocd
 
 on:
   workflow_dispatch:
@@ -28,11 +28,6 @@ jobs:
             --stack-name eks-cluster-stack \
             --template-file ./eks-temel.yaml \
             --capabilities CAPABILITY_NAMED_IAM
-
-      # - name: Describe CloudFormation stack
-      #   run: |
-      #     aws cloudformation describe-stacks \
-      #       --stack-name eks-cluster-stack
 
   setup-argocd:
     name: Setup Argo CD on EKS Cluster
@@ -69,18 +64,3 @@ jobs:
 
 
 
-    # - name: Install Argo CD CLI
-    #   run: |
-    #     curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-    #     chmod +x /usr/local/bin/argocd
-
-    # - name: Wait for Argo CD server to be ready
-    #   run: |
-    #     kubectl wait --for=condition=available --timeout=600s deployment/argocd-server -n argocd
-
-    # - name: Get Argo CD initial password
-    #   run: |
-    #     ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-    #     ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o jsonpath='{.items[0].metadata.name}')
-    #     echo "Argo CD Server: $ARGOCD_SERVER"
-    #     echo "Argo CD Initial Password: $ARGOCD_INITIAL_PASSWORD"
