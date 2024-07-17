@@ -22,6 +22,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Delete all Load Balancers
+        run: |
+          # Delete all classic load balancers
+          aws elb describe-load-balancers --query "LoadBalancerDescriptions[*].LoadBalancerName" --output text | tr "\t" "\n" | while read lbname; do
+            aws elb delete-load-balancer --load-balancer-name $lbname
+          done
+
+          # Delete all application/network load balancers
+          aws elbv2 describe-load-balancers --query "LoadBalancers[*].LoadBalancerArn" --output text | tr "\t" "\n" | while read lbar;
+          do
+            aws elbv2 delete-load-balancer --load-balancer-arn $lbar
+          done
+
       - name: Delete CloudFormation stack
         run: |
           aws cloudformation delete-stack \

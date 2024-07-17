@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a Route 53 Record for an existing EKS Load Balancer using Lambda Function
+
+Resources:
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "elasticloadbalancing:DescribeTags"
+                  - "elasticloadbalancing:DescribeLoadBalancers"
+                  - "route53:ChangeResourceRecordSets"
+                  - "route53:ListHostedZones"
+                  - "route53:ListHostedZonesByName"
+                Resource: "*"
+
+  # Lambda Function
+  FindAndCreateRecordFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import logging
+
+          logging.basicConfig(level=logging.INFO)
+          logger = logging.getLogger()
+
+          def handler(event, context):
+              elb_client = boto3.client('elbv2')
+              route53_client = boto3.client('route53')
+
+              # Describe Load Balancers
+              response = elb_client.describe_load_balancers()
+              logger.info(f"Found {len(response['LoadBalancers'])} Load Balancers")
+
+              # Filter Load Balancer by tags
+              load_balancer_arn = None
+              for lb in response['LoadBalancers']:
+                  lb_arn = lb['LoadBalancerArn']
+                  logger.info(f"Checking Load Balancer: {lb_arn}")
+                  tags = elb_client.describe_tags(
+                      ResourceArns=[lb_arn]
+                  )
+
+                  has_required_tags = False
+                  for tag in tags['TagDescriptions'][0]['Tags']:
+                      logger.info(f"Found tag: {tag['Key']} = {tag['Value']}")
+                      if tag['Key'] == 'kubernetes.io/service-name' and tag['Value'] == 'argocd/argocd-server':
+                          has_required_tags = True
+                          logger.info(f"Found required tag: {tag}")
+                          break
+
+                  if has_required_tags:
+                      load_balancer_arn = lb_arn
+                      break
+
+              if not load_balancer_arn:
+                  logger.error("No Load Balancer found with the specified tags")
+                  raise Exception("No Load Balancer found with the specified tags")
+
+              # Get Load Balancer DNS name
+              lb_details = elb_client.describe_load_balancers(LoadBalancerArns=[load_balancer_arn])
+              lb_dns_name = lb_details['LoadBalancers'][0]['DNSName']
+              logger.info(f"Load Balancer DNS Name: {lb_dns_name}")
+
+              # Get Route 53 hosted zone ID (use your specific hosted zone)
+              hosted_zones = route53_client.list_hosted_zones_by_name(DNSName="awspublic.link.")
+              hosted_zone_id = hosted_zones['HostedZones'][0]['Id']
+              logger.info(f"Hosted Zone ID: {hosted_zone_id}")
+
+              # Create Route 53 record
+              response = route53_client.change_resource_record_sets(
+                  HostedZoneId=hosted_zone_id,
+                  ChangeBatch={
+                      'Changes': [
+                          {
+                              'Action': 'CREATE',
+                              'ResourceRecordSet': {
+                                  'Name': 'argocd.awspublic.link.',  # Sonundaki nokta eklendi
+                                  'Type': 'A',
+                                  'AliasTarget': {
+                                      'HostedZoneId': 'Z02315871P263VSO4AF22',  # Use appropriate zone ID for your region
+                                      'DNSName': lb_dns_name,
+                                      'EvaluateTargetHealth': False
+                                  }
+                              }
+                          }
+                      ]
+                  }
+              )
+
+              logger.info(f"Route 53 Record Created: {response}")
+
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Record created successfully')
+              }
+
+      Runtime: python3.9
+      Timeout: 300
+
+  # Lambda Invoke Permission
+  LambdaInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !GetAtt FindAndCreateRecordFunction.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+
+  # Custom Resource to trigger the Lambda function
+  CustomResourceTrigger:
+    Type: "Custom::TriggerLambda"
+    Properties:
+      ServiceToken: !GetAtt FindAndCreateRecordFunction.Arn
+
+Outputs:
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda function that creates the DNS record"
+    Value: !GetAtt FindAndCreateRecordFunction.Arn
