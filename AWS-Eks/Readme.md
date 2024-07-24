@@ -97,6 +97,19 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
   - **aws-region:** AWS region where the resources will be deployed (us-east-1).
 ### 3. Deploy CloudFormation Stack
 
-Description: Deploys the CloudFormation stack to create the EKS cluster and related resources.
-Command:
-bash
+- **Description:** Deploys the CloudFormation stack to create the EKS cluster and related resources.
+- **Command:**
+```sh
+aws cloudformation deploy \
+  --stack-name eks-cluster-stack \
+  --template-file ./eks-temel.yaml \
+  --capabilities CAPABILITY_NAMED_IAM
+```
+
+
+```sh
+
+    - name: Docker Login
+      run: docker login --username ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PWD }}
+
+```
