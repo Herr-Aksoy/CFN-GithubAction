@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Helm ile Argo CD yüklemek için Lambda işlevi oluşturur'
+
+Parameters:
+  EksClusterName:
+    Type: String
+    Description: 'Name of the EKS Cluster'
+
+  EksClusterRoleArn:
+    Type: String
+    Description: 'ARN of the EKS Cluster IAM Role'
+
+  KubeConfigContent:
+    Type: String
+    Description: 'Kubeconfig content to access the EKS cluster'
+
+Resources:
+  HelmFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "index.handler"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import subprocess
+          import os
+
+          def handler(event, context):
+              release = event['ResourceProperties']['Release']
+              chart = event['ResourceProperties']['Chart']
+              namespace = event['ResourceProperties']['Namespace']
+              version = event['ResourceProperties']['Version']
+              repository = event['ResourceProperties']['Repository']
+              values = event['ResourceProperties']['Values']
+
+              # values.yaml dosyasını geçici bir dosyaya yaz
+              with open('/tmp/values.yaml', 'w') as f:
+                  f.write(values)
+
+              # kubeconfig içeriğini geçici bir dosyaya yaz
+              kubeconfig_content = os.environ.get('KUBECONFIG_CONTENT')
+              with open('/tmp/kubeconfig', 'w') as f:
+                  f.write(kubeconfig_content)
+
+              os.environ['KUBECONFIG'] = '/tmp/kubeconfig'
+
+              # Helm komutunu çalıştırın
+              command = [
+                  "helm", "upgrade", "--install", release, 
+                  chart, "--namespace", namespace, 
+                  "--version", version, 
+                  "--repo", repository,
+                  "--values", "/tmp/values.yaml"
+              ]
+
+              result = subprocess.run(command, capture_output=True, text=True)
+
+              if result.returncode != 0:
+                  raise Exception(f"Helm install failed: {result.stderr}")
+
+              return {
+                  'Status': 'SUCCESS',
+                  'PhysicalResourceId': release
+              }
+      Runtime: "python3.9"
+      Timeout: 300
+      Environment:
+        Variables:
+          KUBECONFIG_CONTENT: !Ref KubeConfigContent
+
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "HelmExecutionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "eks:DescribeCluster"
+                  - "eks:ListClusters"
+                  - "eks:DescribeUpdate"
+                  - "eks:UpdateClusterConfig"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+
+  ArgocdHelmRelease:
+    Type: "Custom::HelmRelease"
+    Properties:
+      ServiceToken: !GetAtt HelmFunction.Arn
+      Release: "argocd"
+      Chart: "argo-cd"
+      Repository: "https://argoproj.github.io/argo-helm"
+      Version: "7.3.4"
+      Namespace: "argocd"
+      Values: |
+        server:
+          service:
+            type: LoadBalancer
+      DependsOn: HelmFunction
+
+Outputs:
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda function used to install Helm charts"
+    Value: !GetAtt HelmFunction.Arn

@@ -1,58 +1,60 @@
-# CloudFormation Template for EKS VPC Setup
-
-This repository contains an AWS CloudFormation template for setting up a VPC and its associated resources for an Amazon EKS cluster. The template creates a VPC, subnets, Internet Gateway, NAT Gateway, Route Tables, and Route Table Associations.
+# CloudFormation Template for Creating EKS Cluster and Node Group
+This CloudFormation template creates an Elastic Kubernetes Service (EKS) cluster and associated Node Group on AWS. It also provisions the required network infrastructure and IAM roles. Below is a detailed description of each resource, its type, and purpose.
 
 ## Resources
+### 1. EksVpc
+- **Type:** AWS::EC2::VPC
+- **Description:** Creates a Virtual Private Cloud (VPC) which provides a network environment for the EKS cluster.
+- **Purpose:** To establish an isolated network environment where the EKS cluster will operate.
+### 2. EksVpcIgw
+- **Type:** AWS::EC2::InternetGateway
+- **Description:** Creates an Internet Gateway to enable internet access for the VPC.
+- **Purpose:** To allow resources within the VPC to access the internet.
+### 3. VpcGatewayAttachment
+- **Type:** AWS::EC2::VPCGatewayAttachment
+- **Description:** Attaches the Internet Gateway to the VPC.
+- **Purpose:** To link the Internet Gateway with the VPC for internet connectivity.
+### 4. PublicSubnetUsEast1a
+- **Type:** AWS::EC2::Subnet
+- **Description:** Creates a public subnet in the 'us-east-1a' Availability Zone.
+- **Purpose:** To provide a network segment for the EKS cluster and other public-facing services.
+### 5. PublicSubnetUsEast1b
+- **Type:** AWS::EC2::Subnet
+- **Description:** Creates a public subnet in the 'us-east-1b' Availability Zone.
+- **Purpose:** To provide a network segment for the EKS cluster and other public-facing services.
+### 6. PublicRouteTable
+- **Type:** AWS::EC2::RouteTable
+- **Description:** Creates a route table for public subnets.
+- **Purpose:** To define routing rules for public subnets, including internet access.
+### 7. PublicRoute
+- **Type:** AWS::EC2::Route
+- **Description:** Defines a route for public subnets to access the internet (0.0.0.0/0).
+- **Purpose:** To enable internet access for resources in public subnets.
+### 8. PublicSubnetRouteTableAssociationUsEast1a
+- **Type:** AWS::EC2::SubnetRouteTableAssociation
+- **Description:** Associates the 'us-east-1a' public subnet with the route table.
+- **Purpose:** To ensure that the 'us-east-1a' public subnet has internet access through the route table.
+### 9. PublicSubnetRouteTableAssociationUsEast1b
+- **Type:** AWS::EC2::SubnetRouteTableAssociation
+- **Description:** Associates the 'us-east-1b' public subnet with the route table.
+- **Purpose:** To ensure that the 'us-east-1b' public subnet has internet access through the route table.
+### 10. EksRole
+- **Type:** AWS::IAM::Role
+- **Description:** Creates an IAM role for the EKS cluster with the necessary permissions.
+- **Purpose:** To grant the EKS cluster the required permissions to access AWS resources.
+### 11. EksCluster
+- **Type:** AWS::EKS::Cluster
+- **Description:** Creates an EKS cluster configured to run within the specified VPC.
+- **Purpose:** To provide a managed Kubernetes cluster for running containerized applications.
+### 12. EksNodeRole
+- **Type:** AWS::IAM::Role
+- **Description:** Creates an IAM role for the EKS Node Group's EC2 instances with necessary permissions.
+- **Purpose:** To allow EC2 instances in the EKS Node Group to interact with AWS services.
+### 13. EksNodeGroup
+- **Type:** AWS::EKS::Nodegroup
+- **Description:** Creates a Node Group within the EKS cluster, specifying the desired EC2 instance types and scaling configuration.
+- **Purpose:** To provide a group of EC2 instances that will run workloads within the EKS cluster.
 
-### VPC
-- **EksVpc**: An Amazon Virtual Private Cloud (VPC) with a CIDR block of `192.168.0.0/16`.
-
-### Internet Gateway
-- **EksVpcIgw**: An Internet Gateway to allow internet access to the VPC.
-- **VpcGatewayAttachment**: Attaches the Internet Gateway to the VPC.
-
-### Subnets
-- **PrivateSubnetUsEast1a**: A private subnet in availability zone `us-east-1a` with a CIDR block of `192.168.0.0/19`.
-- **PrivateSubnetUsEast1b**: A private subnet in availability zone `us-east-1b` with a CIDR block of `192.168.32.0/19`.
-- **PublicSubnetUsEast1a**: A public subnet in availability zone `us-east-1a` with a CIDR block of `192.168.64.0/19`. Instances in this subnet can have public IP addresses.
-- **PublicSubnetUsEast1b**: A public subnet in availability zone `us-east-1b` with a CIDR block of `192.168.96.0/19`. Instances in this subnet can have public IP addresses.
-
-### Elastic IP
-- **NatEip**: An Elastic IP for the NAT Gateway.
-
-### NAT Gateway
-- **NatGateway**: A NAT Gateway in the public subnet `PublicSubnetUsEast1a` to allow instances in the private subnets to access the internet.
-
-### Route Tables
-- **PrivateRouteTable**: A route table for the private subnets.
-  - **PrivateRoute**: A route in the private route table that directs internet-bound traffic (`0.0.0.0/0`) to the NAT Gateway.
-- **PublicRouteTable**: A route table for the public subnets.
-  - **PublicRoute**: A route in the public route table that directs internet-bound traffic (`0.0.0.0/0`) to the Internet Gateway.
-
-### Route Table Associations
-- **PrivateSubnetRouteTableAssociationUsEast1a**: Associates the private subnet `PrivateSubnetUsEast1a` with the private route table.
-- **PrivateSubnetRouteTableAssociationUsEast1b**: Associates the private subnet `PrivateSubnetUsEast1b` with the private route table.
-- **PublicSubnetRouteTableAssociationUsEast1a**: Associates the public subnet `PublicSubnetUsEast1a` with the public route table.
-- **PublicSubnetRouteTableAssociationUsEast1b**: Associates the public subnet `PublicSubnetUsEast1b` with the public route table.
-
-## Usage
-
-To use this CloudFormation template, follow these steps:
-
-1. Clone this repository to your local machine.
-2. Navigate to the AWS Management Console.
-3. Go to the CloudFormation service.
-4. Create a new stack by uploading the `template.yaml` file.
-5. Follow the prompts to complete the stack creation.
-
-## Notes
-
-- Ensure that your AWS CLI is configured with the necessary permissions to create the resources defined in this template.
-- Modify the availability zones and CIDR blocks as needed to fit your network design.
-
-## License
-
-This project is licensed under the MIT License.
 
 
 <table align="center">
@@ -65,3 +67,36 @@ This project is licensed under the MIT License.
     <td align="center"><a  title="Settings">Resources</a></td>
   </tr>
 </table>
+
+
+# GitHub Actions Workflow for Deploying EKS Cluster and Setting Up Argo CD
+This GitHub Actions workflow automates the deployment of an Amazon EKS cluster using CloudFormation and sets up Argo CD on the newly created EKS cluster. Below is a detailed description of each job and step in the workflow.
+
+## Workflow Overview
+The workflow is triggered manually via the GitHub Actions interface. It consists of two main jobs:
+
+**1. Deploy EKS Cluster:** Deploys an EKS cluster using AWS CloudFormation.
+**2. Setup Argo CD:** Sets up Argo CD on the deployed EKS cluster.
+## Workflow Definition
+### a- 'deploy-eks-cluster' Job
+**Purpose:** Deploys an EKS cluster using a CloudFormation stack.
+
+**Steps:**
+
+### 1. Checkout Repository
+
+- **Description:** Checks out the code from the repository so that the workflow can access the CloudFormation template.
+- **Action:** actions/checkout@v2
+### 2. Configure AWS Credentials
+
+- **Description:** Configures AWS credentials required for deploying the CloudFormation stack.
+- **Action:** aws-actions/configure-aws-credentials@v2
+- **Inputs:**
+- **aws-access-key-id:** AWS access key ID stored in GitHub Secrets.
+aws-secret-access-key: AWS secret access key stored in GitHub Secrets.
+aws-region: AWS region where the resources will be deployed (us-east-1).
+### 3. Deploy CloudFormation Stack
+
+Description: Deploys the CloudFormation stack to create the EKS cluster and related resources.
+Command:
+bash
