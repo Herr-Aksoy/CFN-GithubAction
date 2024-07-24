@@ -78,7 +78,9 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 **1. Deploy EKS Cluster:** Deploys an EKS cluster using AWS CloudFormation.  
 **2. Setup Argo CD:** Sets up Argo CD on the deployed EKS cluster.
 ## Workflow Definition
+
 ### a- 'deploy-eks-cluster' Job
+
 **Purpose:** Deploys an EKS cluster using a CloudFormation stack.
 
 **Steps:**
@@ -106,10 +108,49 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
+### b- 'setup-argocd' Job
+**Purpose:** Sets up Argo CD on the EKS cluster created in the previous job.
 
+**Dependencies:** This job depends on the successful completion of the deploy-eks-cluster job.
+
+**Steps:**
+
+### 1. Checkout Code
+
+- **Description:** Checks out the code from the repository to access additional files if necessary.
+- **Action:** actions/checkout@v2
+### 2. Configure AWS Credentials
+
+- **Description:** Configures AWS credentials required for interacting with the EKS cluster.
+- **Action:** aws-actions/configure-aws-credentials@v2
+- **Inputs:**
+  - **aws-access-key-id:** AWS access key ID stored in GitHub Secrets.
+  - **aws-secret-access-key:** AWS secret access key stored in GitHub Secrets.
+  - **aws-region:** AWS region where the EKS cluster is located (us-east-1).
+### 3. Setup kubectl
+
+- **Description:** Installs kubectl, the command-line tool for interacting with Kubernetes clusters.
+- **Command:**
 ```sh
-
-    - name: Docker Login
-      run: docker login --username ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PWD }}
-
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
 ```
+
+### 4. Update kubeconfig
+
+- **Description:** Configures kubectl to use the newly created EKS cluster.
+- **Command:**
+```sh
+aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+```
+### 5. Install Argo CD
+
+- **Description:** Deploys Argo CD to the EKS cluster and exposes it via a LoadBalancer service.
+- **Command:**
+```sh
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
