@@ -92,9 +92,9 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 - **Description:** Configures AWS credentials required for deploying the CloudFormation stack.
 - **Action:** aws-actions/configure-aws-credentials@v2
 - **Inputs:**
-- - **aws-access-key-id:** AWS access key ID stored in GitHub Secrets.
-- - **aws-secret-access-key:** AWS secret access key stored in GitHub Secrets.
-- - **aws-region:** AWS region where the resources will be deployed (us-east-1).
+  - **aws-access-key-id:** AWS access key ID stored in GitHub Secrets.
+  - **aws-secret-access-key:** AWS secret access key stored in GitHub Secrets.
+  - **aws-region:** AWS region where the resources will be deployed (us-east-1).
 ### 3. Deploy CloudFormation Stack
 
 Description: Deploys the CloudFormation stack to create the EKS cluster and related resources.
