@@ -160,6 +160,7 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 ```
+<br><br>
 
 # CloudFormation Template: Route 53 Record Creation for EKS Classic Load Balancer using Lambda
 This CloudFormation template automates the creation of a Route 53 DNS record for an existing Elastic Kubernetes Service (EKS) Classic Load Balancer (CLB) using an AWS Lambda function. Below is a detailed description of the resources defined in this template and their purposes.
@@ -219,3 +220,63 @@ The template consists of the following key components:
 **Details:**
 
 - **ServiceToken:** The ARN of the Lambda function.
+
+<br><br>
+
+# Workflow Definition continued
+
+## c- 'deploy-lambda-cfn' Job 
+
+**Purpose:** Deploys a CloudFormation stack to create a Lambda function.
+
+**Steps:**
+
+### 1. Checkout Repository
+- **Description:** Checks out the code from the repository.
+- **Action:** actions/checkout@v2
+
+### 2. Configure AWS Credentials
+- **Description:** Configures AWS credentials required for deploying the CloudFormation stack.
+- **Action:** aws-actions/configure-aws-credentials@v2
+- **Inputs:**
+  - 'aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}'
+  - 'aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+  - 'aws-region: us-east-1'
+
+### 3. Deploy CloudFormation Stack
+- **Description:** Deploys the CloudFormation stack defined in lambda-cfn.yaml to create a Lambda function.
+- **Command:**
+
+```sh
+aws cloudformation deploy \
+  --stack-name lambdaFunction \
+  --template-file ./lambda-cfn.yaml \
+  --capabilities CAPABILITY_NAMED_IAM
+```
+
+## d- delete-lambda-cfn Job
+**Purpose:** Deletes the previously created Lambda CloudFormation stack.
+
+**Dependencies:** This job requires both setup-argocd and deploy-lambda-cfn to be completed successfully.
+
+**Steps:**
+
+### 1. Checkout Repository
+- **Description:** Checks out the code from the repository.
+- **Action:** actions/checkout@v2
+
+### 2. Configure AWS Credentials
+- **Description:** Configures AWS credentials required for deleting the CloudFormation stack.
+- **Action:** aws-actions/configure-aws-credentials@v2
+- **Inputs:**
+  - 'aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}'
+  - 'aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+  - 'aws-region: us-east-1'
+
+### 3. Delete CloudFormation Stack
+- **Description:** Deletes the CloudFormation stack named lambdaFunction.
+- **Command:** 
+```sh
+aws cloudformation delete-stack \
+  --stack-name lambdaFunction
+```
