@@ -1,5 +1,5 @@
 ## Project Owners
-<table>
+<table align="center">
   <tr>
     <td><img src="images/AhmetAksoy.png" alt="Ahmet Aksoy" width="250"></td>
     <td><img src="images/CemalSenel.png" alt="Mehmet Sever" width="250"></td>
