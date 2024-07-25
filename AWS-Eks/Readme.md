@@ -78,11 +78,11 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 **a. Deploy EKS Cluster:**<a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="More information">Deploys an EKS cluster using AWS CloudFormation.</a>
 
 
-**b. Setup Argo CD:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="More information">Sets up Argo CD on the deployed EKS cluster.</a> 
+**b. Setup Argo CD:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=b%2D%20%27setup%2Dargocd%27%20Job" title="More information">Sets up Argo CD on the deployed EKS cluster.</a> 
 
-**c. Deploy Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="More information">Deploys a CloudFormation stack to create a Lambda function.</a>  
+**c. Deploy Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=c%2D%20%27deploy%2Dlambda%2Dcfn%27%20Job" title="More information">Deploys a CloudFormation stack to create a Lambda function.</a>  
 
-**d. Delete Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="More information">Deletes the previously created Lambda CloudFormation stack.</a>  
+**d. Delete Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=d%2D%20delete%2Dlambda%2Dcfn%20Job" title="More information">Deletes the previously created Lambda CloudFormation stack.</a>  
 
 ## Workflow Definition
 
