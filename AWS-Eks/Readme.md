@@ -80,10 +80,7 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 
 **b. Setup Argo CD:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=b%2D%20%27setup%2Dargocd%27%20Job" title="More information">Sets up Argo CD on the deployed EKS cluster.</a> 
 
-**c. Deploy Lambda CloudFormation Stack:** <a href="#c---deploy-lambda-cfn--job" title="More information">Deploys a CloudFormation stack to create a Lambda function.</a>
-
-[Deploys a CloudFormation stack to create a Lambda function.](https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=d%2D%20delete%2Dlambda%2Dcfn%20Job)
-
+**c. Deploy Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=c%2D%20%27deploy%2Dlambda%2Dcfn%27%20Job" title="More information">Deploys a CloudFormation stack to create a Lambda function.</a>
 
 **d. Delete Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=d%2D%20delete%2Dlambda%2Dcfn%20Job" title="More information">Deletes the previously created Lambda CloudFormation stack.</a>  
 
@@ -281,5 +278,12 @@ aws cloudformation deploy \
 - **Command:** 
 ```sh
 aws cloudformation delete-stack \
+  --stack-name lambdaFunction
+```
+### 4. Wait for Stack Deletion to Complete
+- **Description:** Waits for the stack deletion process to complete.
+- **Command:**
+```sh
+aws cloudformation wait stack-delete-complete \
   --stack-name lambdaFunction
 ```
