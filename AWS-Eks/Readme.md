@@ -82,6 +82,8 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 
 **c. Deploy Lambda CloudFormation Stack:** <a href="#c---deploy-lambda-cfn--job" title="More information">Deploys a CloudFormation stack to create a Lambda function.</a>
 
+[Deploys a CloudFormation stack to create a Lambda function.](#c---deploy-lambda-cfn--job)
+
 
 **d. Delete Lambda CloudFormation Stack:** <a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=d%2D%20delete%2Dlambda%2Dcfn%20Job" title="More information">Deletes the previously created Lambda CloudFormation stack.</a>  
 
