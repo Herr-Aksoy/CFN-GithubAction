@@ -1,12 +1,12 @@
 ## Project Owners
 <table>
   <tr>
-    <td><img src="project-images/readme-images/AhmetAksoy.png" alt="Ahmet Aksoy" width="250"></td>
-    <td><img src="project-images/readme-images/MehmetSever.png" alt="Mehmet Sever" width="250"></td>
+    <td><img src="images/AhmetAksoy.png" alt="Ahmet Aksoy" width="250"></td>
+    <td><img src="images/CemalSenel.png" alt="Mehmet Sever" width="250"></td>
   </tr>
     <tr>
     <td><a href="" align="center">---------->Ahmet Aksoy<---------</a></td>
-    <td><a href="" align="center">---------->Mehmet Sever<---------</a></td>
+    <td><a href="" align="center">---------->Cemal Senel<---------</a></td>
   </tr>
   <tr>
   <td align="center" style="width: 67%;">
