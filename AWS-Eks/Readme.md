@@ -110,8 +110,8 @@ This CloudFormation template creates an Elastic Kubernetes Service (EKS) cluster
 
 <table align="center">
   <tr>
-    <td><img src="images/a1-components.png" alt="Components" width="350"></td>
-    <td><img src="images/a2-resources.png" alt="Resources" width="350"></td>
+    <td><img src="images/eks-components.png" alt="Components" width="350"></td>
+    <td><img src="images/eks-resources.png" alt="Resources" width="350"></td>
   </tr>
   <tr>
     <td align="center"><a  title="Settings">Components</a></td>
