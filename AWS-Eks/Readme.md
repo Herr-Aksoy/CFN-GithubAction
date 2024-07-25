@@ -75,9 +75,7 @@ This GitHub Actions workflow automates the deployment of an Amazon EKS cluster u
 ## Workflow Overview
 The workflow is triggered manually via the GitHub Actions interface. It consists of two main jobs:
 
-**a. Deploy EKS Cluster:**<a href="[Deploys an EKS cluster using AWS CloudFormation.](https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job)" title="More information">Deploys an EKS cluster using AWS CloudFormation.</a>   
-
-<a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="Deploys an EKS cluster using AWS CloudFormation.">Deploys an EKS cluster using AWS CloudFormation.</a>
+**a. Deploy EKS Cluster:**<a href="https://github.com/Herr-Aksoy/CFN-GithubAction/tree/main/AWS-Eks#a--deploy-eks-cluster-job:~:text=a%2D%20%27deploy%2Deks%2Dcluster%27%20Job" title="Deploys an EKS cluster using AWS CloudFormation.">Deploys an EKS cluster using AWS CloudFormation.</a>
 
 
 **b. Setup Argo CD:** Sets up Argo CD on the deployed EKS cluster.  
