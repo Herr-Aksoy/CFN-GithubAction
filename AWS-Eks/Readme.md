@@ -77,9 +77,10 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 
 **1. Deploy EKS Cluster:** Deploys an EKS cluster using AWS CloudFormation.  
 **2. Setup Argo CD:** Sets up Argo CD on the deployed EKS cluster.
+
 ## Workflow Definition
 
-### a- 'deploy-eks-cluster' Job
+## a- 'deploy-eks-cluster' Job
 
 **Purpose:** Deploys an EKS cluster using a CloudFormation stack.
 
@@ -108,7 +109,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
-### b- 'setup-argocd' Job
+## b- 'setup-argocd' Job
 **Purpose:** Sets up Argo CD on the EKS cluster created in the previous job.
 
 **Dependencies:** This job depends on the successful completion of the deploy-eks-cluster job.
@@ -154,3 +155,61 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
+# CloudFormation Template: Route 53 Record Creation for EKS Classic Load Balancer using Lambda
+This CloudFormation template automates the creation of a Route 53 DNS record for an existing Elastic Kubernetes Service (EKS) Classic Load Balancer (CLB) using an AWS Lambda function. Below is a detailed description of the resources defined in this template and their purposes.
+
+## Description
+The template consists of the following key components:
+
+1. IAM Role for Lambda Execution
+2. Lambda Function to Find and Create DNS Record
+3. Permission for Lambda Invocation
+4. Custom Resource to Trigger Lambda
+
+## Resources
+
+### 1. IAM Role for Lambda Execution
+
+**Resource:** LambdaExecutionRole
+
+**Purpose:** Defines an IAM Role that grants the necessary permissions for the Lambda function to interact with AWS services.
+
+**Details:**
+
+- **Service:** lambda.amazonaws.com is allowed to assume this role.
+- **Policies:**
+    - Allows describing load balancers and their tags.
+    - Allows changing and listing Route 53 resource record sets and hosted zones.
+
+## 2. Lambda Function to Find and Create DNS Record
+
+**Resource:** FindAndCreateRecordFunction
+
+**Purpose:** A Lambda function that identifies the target CLB based on specific tags and creates a corresponding DNS record in Route 53.
+
+**Code Functionality:**
+
+- Uses the AWS SDK for Python (boto3) to interact with ELB and Route 53 services.
+- Looks for a CLB with the tag kubernetes.io/service-name set to argocd/argocd-server.
+- Upon finding the CLB, it creates an A record in Route 53 pointing to the CLB's DNS name.
+
+## 3. Permission for Lambda Invocation
+
+**Resource:** LambdaInvokePermission
+
+**Purpose:** Grants permission to AWS events to invoke the Lambda function.
+
+**Details:**
+
+- **Action:** lambda:InvokeFunction
+- **Principal:** events.amazonaws.com
+
+## 4. Custom Resource to Trigger Lambda
+
+**Resource:** CustomResourceTrigger
+
+**Purpose:** A custom resource that triggers the Lambda function during the CloudFormation stack creation process.
+
+**Details:**
+
+- **ServiceToken:** The ARN of the Lambda function.
