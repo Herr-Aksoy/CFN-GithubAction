@@ -22,20 +22,20 @@
     <a href="https://www.xing.com/profile/Ahmet_Aksoy68/web_profiles?expandNeffi=true">
       <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/xing.svg' alt='xing' height='40' title='Xing Profile'>
     </a>
-  </td>                                       <!--Mehmet Sever abi burdan asagi kisim senin-->
+  </td>                                       <!--Cemal Senel burdan asagi kisim senin-->
     <td align="center" style="width: 67%;">
     <a href="https://github.com/cemalsenel">
       <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg' alt='github' height='40' title='Github Profile'>
     </a>
     <a href="https://www.linkedin.com/in/mehmet8sever/">
       <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg' alt='linkedin' height='40' title='Linkedin Profile'>
-    <!-- </a>
-    <a href="https://www.instagram.com/updated_devops?igsh=N3kxOWMwdDhsaTZl">
-      <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/instagram.svg' alt='instagram' height='40' title='Instagram Profile'>
     </a>
+    <!-- <a href="https://www.instagram.com/updated_devops?igsh=N3kxOWMwdDhsaTZl">
+      <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/instagram.svg' alt='instagram' height='40' title='Instagram Profile'>
+    </a> -->
     <a href="https://www.xing.com/profile/Ahmet_Aksoy68/web_profiles?expandNeffi=true">
       <img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/xing.svg' alt='xing' height='40' title='Xing Profile'>
-    </a> -->
+    </a>
   </td>
 </tr>
 </table>
@@ -162,7 +162,7 @@ The workflow is triggered manually via the GitHub Actions interface. It consists
 ```sh
 aws cloudformation deploy \
   --stack-name eks-cluster-stack \
-  --template-file ./eks-temel.yaml \
+  --template-file ./eks-Infrastructure.yaml \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
