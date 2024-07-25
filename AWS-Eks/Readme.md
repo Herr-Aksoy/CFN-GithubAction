@@ -1,6 +1,6 @@
 <p align="center"><strong>AWS-EKS Infrastructure</strong></p>
 <p align="center">
-  <img src="https://github.com/Herr-Aksoy/CFN-GithubAction/blob/main/AWS-Eks/images/AWS-Eks-CludFormation.gif" width="700" height="250"/>  
+  <img src="https://github.com/Herr-Aksoy/CFN-GithubAction/blob/main/AWS-Eks/images/AWS-Eks-CludFormation.gif" width="700" height="900"/>  
 </p>
 
 
